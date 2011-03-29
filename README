@@ -1,34 +1,47 @@
-		dSutil 0.3 by Russ@viGeek.net
--------------------------------------------------------------
-
-dSutil is a small series of bash scripts I wrote in order to deal with 
-minor-moderate ddos attacks.  This is really only suitable if your 
-infrastructure can handle the attack but server cant handle the load, 
-which is often the case if you're hosting in a datacenter.
-
-I originally wrote this for a company several years ago, however in it's 
-present state it's outdated and has never been user friendly.  I'm going 
-to do a clean rewrite and release components individually, then tie it 
-all together at the end.  But each component may be used on it's own.
+ddoSutil is a small collection of Linux scripts designed to deal with minor to moderate ddos attacks.  Modern DDOS attacks have the ability to attack various resources, therefore ddoSutil comes with 
+a combination of scripts intended to deal with different attack methods.  
 
 (License)
 ------------------------------------------------------------
-GPL v2
+GPL v3
 
-(Features)
+(Modules)
 ------------------------------------------------------------
-1)  geoIP [bash] - Ability to block entire countries from 
-connectivity via IPTables.  We use well known lists.
+1)  ddoSutil-geoIP.sh [bash]
+	. The GeoIP scripts blocks connectivity from a particular country.
+	. Easy to use, can unlock/block country with single command.
+	. GeoIP database is automatically updated.
+	. Fast operation, takes less than one minute to block an entire country.
+	. Works out of the box (uses IPTables chains)
+	. Most DDOS attacks originate from another country, therefore blocking can be effective.
 
-2) SYN flood protection [bash] - We set kernel parameters to 
-limit SYN flood effectiveness as well as optional monitoring with active IP banning.
+2)  ddoSutil-harden.sh [bash]
+	. The harden script implements several basic preventative measures.
+	. Implements:  SYN Filtering, Forwarding(off), ICMP filtering and spoof protection.
+	. Configures IPTables to restrict the amount of connections per IP address in the SYN state (port 80).
+	. Configures IPTables to set a hard quota on the amount of connections per IP address (global).
+	. Options can easily be independently enabled or disabled.
 
-3) Referral Block [bash] - Ability to block specific referrers.
+3)  ddoSutil-gpblock.sh [bash]
+	. Often DDOS attacks will make get/post requests to invalid resources i.e site.com/a?38383.
+	. The gpblock.sh module scans Apache style log files for these requests,
+	. When a request that matches is found, we add the offending IP adress to a blocked list.
+	. Configurable, can define the number of requests to a resource per IP address before adding to blocked list.
+	. Easy to use, ability to edit/remove block lists or add to existing.
+	. Works out of the box (uses IPTables chains)
 
-4) Get/Post Protection [bash] - Monitors for specfic get/post 
-requests and builds ban lists based on invalid malicious requests.  
+4) ddoSutil-refblock.sh [bash]
+	. DDOS attacks can come from a select few referrers.
+	. refblock allows you to define who these referrers are.
+	. refblock then finds all the IP addresses associated with a particular refferer and blocks their connectivity.
 
-5) mySQL Killer [perl] - Helps the database stay alive by killing queries 
-overloading mySQL.
+5) ddoSutil-mySQLrecover.pl [perl] 
+	. DDOS attacks that seep through to the database layer often overload mySQL server.
+	. mySQLrecover.pl is effective at killing slow/hung queries bogging down a mySQL server.
+	. Configurable ability to set threshold (in seconds) to define which queries to kill.
 
-6) DDOS Deflate [python] - Integrated DDOS deflate support.
+6) ddoSutil-deflate.py [python] - Integrated DDOS deflate support.
+	. Implements DDOS deflate into Python.
+	. Improved performance and usability.
+	. Integrates with existing ddoSutil scripts.
+
