@@ -1,0 +1,34 @@
+		dSutil 0.3 by Russ@viGeek.net
+-------------------------------------------------------------
+
+dSutil is a small series of bash scripts I wrote in order to deal with 
+minor-moderate ddos attacks.  This is really only suitable if your 
+infrastructure can handle the attack but server cant handle the load, 
+which is often the case if you're hosting in a datacenter.
+
+I originally wrote this for a company several years ago, however in it's 
+present state it's outdated and has never been user friendly.  I'm going 
+to do a clean rewrite and release components individually, then tie it 
+all together at the end.  But each component may be used on it's own.
+
+(License)
+------------------------------------------------------------
+GPL v2
+
+(Features)
+------------------------------------------------------------
+1)  geoIP [bash] - Ability to block entire countries from 
+connectivity via IPTables.  We use well known lists.
+
+2) SYN flood protection [bash] - We set kernel parameters to 
+limit SYN flood effectiveness as well as optional monitoring with active IP banning.
+
+3) Referral Block [bash] - Ability to block specific referrers.
+
+4) Get/Post Protection [bash] - Monitors for specfic get/post 
+requests and builds ban lists based on invalid malicious requests.  
+
+5) mySQL Killer [perl] - Helps the database stay alive by killing queries 
+overloading mySQL.
+
+6) DDOS Deflate [python] - Integrated DDOS deflate support.
