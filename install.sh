@@ -29,13 +29,13 @@ if [ -d $INSTALL_DIR ] ; then
         
         # Make our directories
         mkdir -p data
-        mkdir -p logs
-        mkdir -p docs
-        if [[ -d "$INSTALL_DIR/ddoSutil/data" && -d "$INSTALL_DIR/ddoSutil/logs" && -d "$INSTALL_DIR/ddoSutil/docs" ]] ; then
+        mkdir -p conf
+        mkdir -p data/logs
+        if [[ -d "$INSTALL_DIR/ddoSutil/data" && -d "$INSTALL_DIR/ddoSutil/conf" && -d "$INSTALL_DIR/ddoSutil/data/logs" ]] ; then
             eecho "Successfully created data, docs and log directories"
             # Download the scripts....
         
-            wget -q -O docs/README http://www.viGeek.net/projects/ddoSutil/README
+            wget -q -O README http://www.viGeek.net/projects/ddoSutil/README
             wget -q -O ddoSutil-harden.sh http://www.viGeek.net/projects/ddoSutil/ddoSutil-harden.sh
                 if [ ! -f ddoSutil-harden.sh ] ; then eecho "Failed to download ddoSutil-harden.sh, moving on..." ; fi
             wget -q -O ddoSutil-gpblock.sh http://www.viGeek.net/projects/ddoSutil/ddoSutil-gpblock.sh

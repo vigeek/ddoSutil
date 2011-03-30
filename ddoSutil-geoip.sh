@@ -31,7 +31,7 @@ GEO_UPDATE="1"
 USE_MIRROR="1"
 
 # LOG File
-LOG_FILE="dSutil-geoip.txt"
+LOG_FILE="./data/log/geoip.log"
 
 # No need to edit anything below this.
 

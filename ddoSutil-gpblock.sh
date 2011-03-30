@@ -10,10 +10,10 @@ APACHE_LOG="makeover_access_log"
 MAX_REQUESTS="2"
 
 # Logging/output option
-LOG_FILE="something.log"
+LOG_FILE="./data/log/gpblock.log"
 
 # No need to edit anything below this line
-BAN_FILE="dsutilGP-ban.lst"
+BAN_FILE="./data/dsutilGP-ban.lst"
 TEMP_FILE="/tmp/dsutil-gp.tmp"
 
 usage() {

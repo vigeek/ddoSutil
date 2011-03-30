@@ -5,6 +5,12 @@ a combination of scripts intended to deal with different attack methods.
 ------------------------------------------------------------
 GPL v3
 
+(Installation)
+------------------------------------------------------------
+Download the install.sh script (net installation, downloads files automatically).
+Then execute: sh install.sh
+Then simply follow prompts.
+
 (Modules)
 ------------------------------------------------------------
 1)  ddoSutil-geoIP.sh [bash]
@@ -44,4 +50,8 @@ GPL v3
 	. Implements DDOS deflate into Python.
 	. Improved performance and usability.
 	. Integrates with existing ddoSutil scripts.
+7) ddoSutil-nstat.sh [bash]
+        . Shows detailed network information.
+        . Useful at determining the type of ddos attack.
+
 

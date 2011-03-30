@@ -5,7 +5,7 @@
 # Uses kernel filtering and iptables.
 
 # Desired log location, default is current working directory.
-LOG_FILE="$(pwd)/dSutil-harden.log"
+LOG_FILE="./data/log/harden.log"
 
 # Location of sysctl.conf (usually /etc/sysctl.conf)
 SYSCTL_FILE="/etc/sysctl.conf"
