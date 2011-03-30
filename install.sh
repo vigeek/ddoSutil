@@ -44,6 +44,8 @@ if [ -d $INSTALL_DIR ] ; then
                 if [ ! -f ddoSutil-geoip.sh ] ; then eecho "Failed to download ddoSutil-geoip.sh, moving on..." ; fi
             wget -q -O ddoSutil-deflate.py http://www.viGeek.net/projects/ddoSutil/ddoSutil-deflate.py
                 if [ ! -f ddoSutil-deflate.py ] ; then eecho "Failed to download ddoSutil-deflate.py, moving on..." ; fi
+            wget -q -O ddoSutil-nstat.sh http://www.viGeek.net/projects/ddoSutil/ddoSutil-nstat.sh
+                if [ ! -f ddoSutil-nstat.sh ] ; then eecho "Failed to download ddoSutil-nstat.sh, moving on..." ; fi
             
             eecho "Installation completed to: $INSTALL_DIR/ddoSutil"
         else
