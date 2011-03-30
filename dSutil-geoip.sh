@@ -92,7 +92,7 @@ iptables_method () {
 # We use CURL to cross reference our files.
 if [ $GEO_UPDATE -eq 1 ] ; then
     if [ $USE_MIRROR -eq 1 ] ; then
-     GET_SUCCESS=$(curl -s -w %{size_download} -o 'all-zones.tar.gz' -z all-zones.tar.gz http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
+     GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z all-zones.tar.gz http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
     else
      GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip http://vigeek.net/files/GeoIPCountryCSV.zip)
     fi
@@ -192,10 +192,10 @@ done
 if [ -z $COUNTRY_NAME ] ; then usage ; exit 1 ; fi
 if [ -z $ACTION ] ; then usage ; exit 1 ; fi
 
-if [ -d dSutil-data ] ; then
-    cd dSutil-data ; if [ $? -ne 0 ] ; then log "error changing directories" ; fi
+if [ -d data ] ; then
+    cd data ; if [ $? -ne 0 ] ; then log "error changing directories" ; fi
 else
-    mkdir -p dSutil-data
+    mkdir -p data
 fi
 
 iptables_method
