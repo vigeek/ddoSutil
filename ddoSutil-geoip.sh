@@ -113,7 +113,7 @@ if [ $ACTION -eq 1 ] ; then
             exit 1
         fi
     
-    zcat GeoIPCountryCSV.zip | grep -iw "$COUNTRY_NAME" | cut -d "," -f1,2 | sed 's/,/-/g' | tr -d '"' > $SAVE_FILE
+    zcat GeoIPCountryCSV.zip | grep -i "$COUNTRY_NAME" | cut -d "," -f1,2 | sed 's/,/-/g' | tr -d '"' > $SAVE_FILE
     if [ -f $SAVE_FILE ] ; then
         if [ $(cat $SAVE_FILE | wc -l) -eq 0 ] ; then
             log "Error: no geoIP list built, is this correct: $COUNTRY_NAME"
