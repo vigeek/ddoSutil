@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dSutil-geoIP.sh 0.3 part of dSutil by Russ@viGeek.net.
+# dSutil-geoIP.sh 0.4 part of dSutil by Russ@viGeek.net.
 # This is the separate script usable outside of the dSutil package.
 
 # Requires iptables active/enabled.
