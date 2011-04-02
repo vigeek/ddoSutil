@@ -3,18 +3,14 @@
 # This is a separate script usable outside of the dSutil package.
 # Actively builds an IPTables ban list, keep using until attack traffic reduced.
 
-# Apache log file (wildcards accepted for multiple logs ie: *.log)
-APACHE_LOG="makeover_access_log"
+# READ THE CONF
+  if [ -f ./conf/gpblock.conf ] ; then
+        . ./conf/gpblock.conf
+  else
+        echo -e "Error, unable to read configuration file [./conf/gpblock.conf]"
+        exit 1
+  fi
 
-# How many GET/PUT requests in the log per IP before we ban.
-MAX_REQUESTS="2"
-
-# Logging/output option
-LOG_FILE="./data/log/gpblock.log"
-
-# No need to edit anything below this line
-BAN_FILE="./data/dsutilGP-ban.lst"
-TEMP_FILE="/tmp/dsutil-gp.tmp"
 
 usage() {
 cat << EOF
@@ -41,7 +37,7 @@ IP_TABLES=`which iptables`
 # Simple logging function, if verbose enabled we also send to console.
 log () {
     if [ $VERBOSE -eq 1 ] ; then necho "$1" ; fi
-echo -e "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> $LOG_FILE
+echo -e "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> ./data/logs/$LOG_FILE
 }
 
 # Put some color in our echo statements
@@ -100,7 +96,7 @@ if [[ $COUNTER == *0* ]]; then
 echo -n "."
             fi
 fi
-echo -e $requests >> $BAN_FILE
+echo -e $requests >> ./data/$BAN_FILE
     fi
 sed -i '/'$requests'/d' $TEMP_FILE
 done
@@ -113,7 +109,7 @@ ban_the_list () {
 }
 
 remove_ban_list () {
-    rm -f $BAN_FILE
+    rm -f ./data/$BAN_FILE
 }
 
 # Go through and get our user arguments.
@@ -145,8 +141,8 @@ done
 if [[ -n "$FILTER" && -n "$DROP" ]] ; then necho "Both delete (-d) and run (-r) arguments given, only select one action" ; exit 1 ; fi
 
 if [ $DROP -eq "1" ] ; then
-	if [ -f $BAN_FILE ] ; then
-	ask_them "You're about to remove $(cat $BAN_FILE | wc -l) records from IPTables, continue?"
+	if [ -f ./data/$BAN_FILE ] ; then
+	ask_them "You're about to remove $(cat ./data/$BAN_FILE | wc -l) records from IPTables, continue?"
 		if ($USER_ACTION ) ; then
 			remove_ban_list
 		fi

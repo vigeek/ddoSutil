@@ -46,7 +46,14 @@ if [ -d $INSTALL_DIR ] ; then
                 if [ ! -f ddoSutil-deflate.py ] ; then eecho "Failed to download ddoSutil-deflate.py, moving on..." ; fi
             wget -q -O ddoSutil-nstat.sh http://www.viGeek.net/projects/ddoSutil/ddoSutil-nstat.sh
                 if [ ! -f ddoSutil-nstat.sh ] ; then eecho "Failed to download ddoSutil-nstat.sh, moving on..." ; fi
-            
+
+	    # Download the configuration files.
+		cd conf ; if [ $? -ne 0 ] ; then echo "Error on install" ; exit 1 ;fi
+            wget -q -O geoip.conf http://www.viGeek.net/projects/ddoSutil/conf/geoip.conf
+                if [ ! -f geoip.conf ] ; then eecho "Failed to download geoip.conf, moving on..." ; fi
+            wget -q -O gpblock.conf http://www.viGeek.net/projects/ddoSutil/conf/gpblock.conf
+                if [ ! -f gpblock.conf ] ; then eecho "Failed to download gpblock.conf, moving on..." ; fi
+
             eecho "Installation completed to: $INSTALL_DIR/ddoSutil"
         else
             eecho "Failed to create required directories, exiting."

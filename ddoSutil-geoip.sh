@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # dSutil-geoIP.sh 0.3 part of dSutil by Russ@viGeek.net.
 # This is the separate script usable outside of the dSutil package.
+
 # Requires iptables active/enabled.
 
-# Set method. IPTables (default)
-# Coming soon:  IPSet support.
-SET_METHOD="iptables"
+# READ THE CONF
+  if [ -f ./conf/geoip.conf ] ; then
+	. ./conf/geoip.conf
+  else
+	echo -e "Error, unable to read configuration file [./conf/geoip.conf]"
+	exit 1
+  fi
+
+# No need to edit anything below this.
 
 usage() {
 cat << EOF
@@ -23,17 +30,6 @@ EOF
 exit 1
 }
 
-# Enables automatic updating of the database.
-GEO_UPDATE="1"
-
-# 1 - Maxmind Mirror (Recommended)
-# 2 - viGeek.net Mirror - I maintain an updated copy, limited speed.
-USE_MIRROR="1"
-
-# LOG File
-LOG_FILE="./data/log/geoip.log"
-
-# No need to edit anything below this.
 
 IP_TABLES=`which iptables`
 
@@ -70,7 +66,7 @@ ask_them () {
 # Simple logging function.
 log () {
     if [ $VERBOSE ] ; then necho "$(date +%H:%M:%S) $1" ; fi
-    echo -e "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> $LOG_FILE
+    echo -e "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> ./logs/$LOG_FILE
 }
 
 # Create our directory to hold the zones if it does not exist..
@@ -92,11 +88,13 @@ iptables_method () {
 # We use CURL to cross reference our files.
 if [ $GEO_UPDATE -eq 1 ] ; then
     if [ $USE_MIRROR -eq 1 ] ; then
-     GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z all-zones.tar.gz http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
+	pwd
+     GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
     else
      GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip http://vigeek.net/files/GeoIPCountryCSV.zip)
     fi
     # If downloaded 0 bytes then.
+	echo -e $GET_SUCCESS
     if [ $GET_SUCCESS -eq 0 ] ; then
         log "Local version of GeoIP list current, no download required."
     else
@@ -131,7 +129,7 @@ if [ $ACTION -eq 1 ] ; then
                fi
             done
             ask_them "Begin blocking connections from $COUNTRY_NAME?"
-                if [ $USER_ACTION ] ; then
+                if ($USER_ACTION) ; then
                     $IP_TABLES -I INPUT -j $SAVE_FILE
                     $IP_TABLES -I FORWARD -j $SAVE_FILE
                 fi
@@ -140,8 +138,8 @@ if [ $ACTION -eq 1 ] ; then
     fi
 else
     # Disable Action... Flush the chain...
+	SAVE_FILE=$(echo $COUNTRY_NAME | tr -d ' ')
     if [ -f $SAVE_FILE ] ; then
-        SAVE_FILE=$(echo $COUNTRY_NAME | tr -d ' ')
         $IP_TABLES -F $SAVE_FILE
         # Lets delete the rules.
         for rulenum in `$IP_TABLES -L INPUT --line-numbers | grep -i $SAVE_FILE | awk '{print $1}' | sed '1!G;h;$!d'` ; do
