@@ -8,8 +8,9 @@ GPL v3
 (Installation)
 ------------------------------------------------------------
 Download the install.sh script (net installation, downloads files automatically).
-Then execute: sh install.sh
-Then simply follow prompts to install.
+wget vigeek.net/projects/ddoSutil/install.sh
+chmod +x install.sh
+sh install.sh
 
 (Modules)
 ------------------------------------------------------------
