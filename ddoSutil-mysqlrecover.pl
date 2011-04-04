@@ -5,10 +5,24 @@
 
 use diagnostics -verbose;
 enable  diagnostics;
-use DBI;
-use MIME::Lite;
+#use DBI;
+#use MIME::Lite;
 
-require "./conf/mysqlrecover.conf";
+my $config_file = "./conf/mysqlrecover.conf";
+open CONFIG, "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
+my $config = join "", <CONFIG>;
+close CONFIG;
+eval $config;
+die "Could not read the configuration file '$config_file'" if $@;
+
+# These should be left default
+my $sql                   = 'SHOW FULL PROCESSLIST';
+my $dbhost                =`/bin/hostname`;
+my $count                 = 0;
+my $killedAQuery          = 0;
+
+# Set log file
+my $file                  = "./data/logs/mysqlrecover.log";
 
 # Open our log
 open FILE, ">$file" or die "unable to open $file $!";
