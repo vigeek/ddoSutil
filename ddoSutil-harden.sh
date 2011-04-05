@@ -4,22 +4,17 @@
 # This is a separate script usable outside of the dSutil package.
 # Uses kernel filtering and iptables.
 
-# Desired log location, default is current working directory.
-LOG_FILE="./data/log/harden.log"
+# READ THE CONF
+  if [ -f ./conf/harden.conf ] ; then
+        . ./conf/harden.conf
+  else
+      	echo -e "Error, unable to read configuration file [./conf/harden.conf]"
+        exit 1
+  fi
 
-# Location of sysctl.conf (usually /etc/sysctl.conf)
-SYSCTL_FILE="/etc/sysctl.conf"
-
-# Settings become active instantly, however if this set to 1, we also add them to sysctl making them alive on reboot.
-MAKE_PERM="1"
-
-# Verbose... 0 to disable.
-VERBOSE="1"
 
 # IPTABLES Binary
 IP_TABLES=`which iptables`
-# IPTables configuration file
-IPT_SAVE="/etc/sysconfig/iptables"
 
 # No need to edit anything below this line.
 TMP_OUT="/tmp/dSutil-out.txt"
@@ -30,7 +25,7 @@ FUNCTION_FAILURE="1"
 # Simple logging function
 log () {
     if [ $VERBOSE -eq "1" ] ; then echo -e "\033[1m$(date +%H:%M:%S) $1\033[0m" ; fi
-    echo -e "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> $LOG_FILE
+    echo -e "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> ./data/logs/$LOG_FILE
 }
 # We call this function when we need to know the users desired action
 ask_them () {
@@ -137,24 +132,7 @@ action_loop() {
     done
 }
 
-# Limit connections (iptables)
-# This will limit the amount of connections per IP address, often useful for various attacks.
-limit_connections () {
-    ask_them "Do you want to limit web server (port 80) connections per IP?"
-        if [ $USER_ACTION -eq "1" ] ; then
-            echo -n "How many connections to allow per IP on port 80?:"
-            read LIMIT
-            log "Limit connections integer provided:  $LIMIT"
-                if [ -z $(echo $LIMIT | grep "^[0-9]*$") ] ; then
-                    echo "Non integer value provided, exiting function"
-                    return $FUNCTION_FAILURE
-                fi
-            $IP_TABLES -A INPUT -p tcp --syn --dport 80 -m connlimit --connlimit-above $LIMIT -j REJECT --reject-with tcp-reset
-             
-        fi
-}
-
-limit_connections () {
+limit_connections_all () {
     ask_them "Do you wish to globally hard cap the amount of SYN packets per IP?"
         if [ $USER_ACTION -eq "1" ] ; then
             echo -n "How many SYN packets to allow per IP?:"
@@ -164,7 +142,7 @@ limit_connections () {
                     echo "Non integer value provided, exiting function"
                     return $FUNCTION_FAILURE
                 fi
-            iptables -A INPUT -p tcp --syn -m iplimit --iplimit-above $LIMIT -j REJECT --reject-with tcp-rese
+            iptables -A INPUT -p tcp --syn -m connlimit --connlimit-above $LIMIT -j REJECT --reject-with tcp-rese
              
         fi
 }
@@ -190,6 +168,9 @@ action_loop "/proc/sys/net/ipv4/conf/*/accept_source_route" "Accept Redirect Pro
 action_loop "/proc/sys/net/ipv4/conf/*/accept_redirects" "Accept Redirect Protection" "2"
 action_loop "/proc/sys/net/ipv4/conf/*/send_redirects" "Send Redirect Protection" "2"
 action_loop "/proc/sys/net/ipv4/conf/*/rp_filter" "Send Redirect Protection" "1"
+
+# Limit connections ALL
+limit_connections_all
 
 # Exit add trap handlers.
 trap_cleanup
