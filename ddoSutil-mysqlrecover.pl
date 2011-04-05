@@ -3,10 +3,8 @@
 # russ@viGeek.net - 2009 - (Added kill count, dry run, alert options, adjustable threshold, console and emailing functions)
 # ddoSutil-mysqlrecover.pl
 
-use diagnostics -verbose;
-enable  diagnostics;
-#use DBI;
-#use MIME::Lite;
+use DBI;
+use MIME::Lite;
 
 my $config_file = "./conf/mysqlrecover.conf";
 open CONFIG, "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";

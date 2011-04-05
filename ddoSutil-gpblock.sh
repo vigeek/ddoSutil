@@ -7,10 +7,13 @@
   if [ -f ./conf/gpblock.conf ] ; then
         . ./conf/gpblock.conf
   else
-        echo -e "Error, unable to read configuration file [./conf/gpblock.conf]"
+echo -e "Error, unable to read configuration file [./conf/gpblock.conf]"
         exit 1
   fi
 
+# No need to change these...
+BAN_FILE="ddosutilGP-ban.lst"
+TEMP_FILE="/tmp/dsutil-gp.tmp"
 
 usage() {
 cat << EOF
@@ -59,8 +62,8 @@ ask_them () {
             USER_ACTION=false
         ;;
         *)
-            USER_ACTION=false
-log "Invalid option given, expecting yes or no"
+			log "Invalid option given, expecting yes or no"
+			ask_them "$1" # Ask them the same question again.
         ;;
     esac
 }
@@ -70,33 +73,33 @@ build_lists() {
 # Depending on log size and system speed, entire process should take under 1 minute.
 echo -en "\e[1;31mdSutil:\033[0m working, building requests list"
 for line in `grep -i $FILTER $APACHE_LOG | awk '{ print $1,$6,$7}'`; do
-if [[ $line == *$FILTER* ]] ; then
-echo -e "$line" | awk '{print $1}' >> $TEMP_FILE
-        let COUNTER+=1
-        if [ $VERBOSE -eq 1 ] ; then
-if [[ $COUNTER == *10* ]]; then
-echo -n "."
-            fi
-fi
-fi
+	if [[ $line == *$FILTER* ]] ; then # Current line matches our filter string.
+	  echo -e "$line" | awk '{print $1}' >> $TEMP_FILE # Add that line to our temp file
+	  let COUNTER+=1 # Counter has no purpose other than to make some progress output...
+		if [ -n "$VERBOSE" ] ; then
+			if [[ $COUNTER == *10* ]]; then # Cuts down on the progress output.
+				echo -n "." 
+			fi
+		fi
+	fi
 done
 echo -e ""
 necho "Operation completed total records: $COUNTER"
 
 
-# Now that we are done passing the log, let's verify if a user is over our max_requestst hreshold
+# Now that we are done creating the log, let's verify if a user is over our max_requestst hreshold
 COUNTER="0"
 echo -en "\e[1;31mdSutil:\033[0m working, building IP offender list"
 for requests in `awk '{print}' $TEMP_FILE | sort -u` ; do
-SUCCESS=`grep -i $requests $TEMP_FILE | wc -l`
+  SUCCESS=`grep -i $requests $TEMP_FILE | wc -l`
     if [ $SUCCESS -gt $MAX_REQUESTS ] ; then
-let COUNTER+=1
-        if [ $VERBOSE -eq 1 ] ; then
-if [[ $COUNTER == *0* ]]; then
-echo -n "."
-            fi
-fi
-echo -e $requests >> ./data/$BAN_FILE
+	  let COUNTER+=1
+        if [ -n "$VERBOSE" ] ; then
+			if [[ $COUNTER == *0* ]]; then
+				echo -n "."
+			fi
+		fi
+	  echo -e $requests >> ./data/$BAN_FILE
     fi
 sed -i '/'$requests'/d' $TEMP_FILE
 done
@@ -106,9 +109,27 @@ necho "Operation completed total offending IP addresses: $COUNTER"
 
 ban_the_list () {
     ask_them "Do you want to block offending IP addresses now?"
+      if ($USER_ACTION) ; then
+
+	$IP_TABLES -N ddoSutil 2> /dev/null
+        if [ $? -eq 1 ] ; then
+		necho "Chain exists, adding to existing chain"
+        fi
+
+	for ipadd in `awk '{print}' ./data/$BAN_FILE` ; do
+		$IP_TABLES -A ddoSutil -s $ipadd -j DROP
+	done
+     fi
 }
 
 remove_ban_list () {
+ for rulenum in `iptables -L ddoSutil --line-numbers | awk '{print $1}' | sed '1!G;h;$!d' | grep ^[0-9]` ; do
+     $IP_TABLES -D ddoSutil $rulenum
+ done
+   $IP_TABLES -X ddoSutil
+        if [ $? -eq 0 ] ; then
+	    necho "successfully deleted chains"
+        fi
     rm -f ./data/$BAN_FILE
 }
 
@@ -139,12 +160,17 @@ done
 
 # Ensure the user only supplied a single action
 if [[ -n "$FILTER" && -n "$DROP" ]] ; then necho "Both delete (-d) and run (-r) arguments given, only select one action" ; exit 1 ; fi
+if [[ -z "$FILTER" && -z "$DROP" ]] ; then necho "Error, no arguments supplied at runtime" ; usage ; fi
 
-if [ $DROP -eq "1" ] ; then
+if [ -n "$DROP" ] ; then
 	if [ -f ./data/$BAN_FILE ] ; then
 	ask_them "You're about to remove $(cat ./data/$BAN_FILE | wc -l) records from IPTables, continue?"
-		if ($USER_ACTION ) ; then
-			remove_ban_list
+		if ($USER_ACTION) ; then
+		  remove_ban_list
 		fi
-	then
+	fi
+else
+	build_lists
+	ban_the_list
 fi
+
