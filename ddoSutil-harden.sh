@@ -25,11 +25,11 @@ FUNCTION_FAILURE="1"
 # Simple logging function
 log () {
     if [ $VERBOSE -eq "1" ] ; then echo -e "\033[1m$(date +%H:%M:%S) $1\033[0m" ; fi
-    echo -e "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> ./data/logs/$LOG_FILE
+    echo "$(date +%m-%d-%Y\ %H:%M:%S) | $1" >> ./data/logs/$LOG_FILE
 }
 # We call this function when we need to know the users desired action
 ask_them () {
-    echo -n "$1 (yes/no):"
+    echo -en "\e[1;31mddoSutil:\033[0m $1 (yes/no):"
     read ACTION
     # We use awk to change our string to lower case.    
     ACTION=$(echo $ACTION | awk '{print tolower($0)}')
@@ -49,14 +49,13 @@ ask_them () {
 
 # We verify if the backup files exist, if they do, we do nothing.
 backup_files () {
-    if [ ! -f $SYSCTL_FILE ] ; then
-        cp $SYSCTL_FILE $(pwd)sysctl.orig
-        log "Backed up $SYSCTL_FILE to $(pwd)sysctl.orig"
-    fi
-    
-    if [ ! -f $IPT_SAVE ] ; then
-        cp $IPT_SAVE $(pwd)iptables.orig
-        log "Backed up $IPT_SAVE to $(pwd)iptables.orig"
+    if [ ! -f ./data/sysctl.orig ] ; then
+        cp $SYSCTL_FILE ./data/sysctl.orig 2> /dev/null
+		if [ $? -ne 0 ] ; then
+			log "Backed up $SYSCTL_FILE to ./data/iptables.orig"
+		else
+			echo -e "Error: unable to backup $SYSCTL_FILE, please backup manually."
+        fi        
     fi
 }
 
@@ -142,7 +141,22 @@ limit_connections_all () {
                     echo "Non integer value provided, exiting function"
                     return $FUNCTION_FAILURE
                 fi
-            iptables -A INPUT -p tcp --syn -m connlimit --connlimit-above $LIMIT -j REJECT --reject-with tcp-rese
+	    $IP_TABLES -N ddoSutil-harden 2> /dev/null
+        	if [ $? -eq 1 ] ; then
+					echo "ddoSutil-harden IPTables chain exists, please remove first"
+				    ask_them "Would you like to delete the existing chain and update it?"
+				    if [ $USER_ACTION -eq "1" ] ; then
+				    for rulenum in `$IP_TABLES -L ddoSutil-harden --line-numbers | awk '{print $1}' | sed '1!G;h;$!d' | grep ^[0-9]` ; do
+						$IP_TABLES -D ddoSutil-harden $rulenum
+					done
+					$IP_TABLES -X ddoSutil-harden
+						if [ $? -eq 0 ] ; then
+							echo "successfully deleted chains"
+						fi
+				    fi
+						
+       		fi
+            $IP_TABLES -A ddoSutil-harden -p tcp --syn -m connlimit --connlimit-above $LIMIT -j REJECT --reject-with tcp-reset
              
         fi
 }
@@ -157,7 +171,7 @@ backup_files
 
 # Take initial action
 take_action "/proc/sys/net/ipv4/tcp_syncookies" "net.ipv4.tcp_syncookies" "SYN filtering"
-take_action "/proc/sys/net/ipv4/ip_forward" "net.ipv4.ip_forward" "TCP Forwarding"
+take_action2 "/proc/sys/net/ipv4/ip_forward" "net.ipv4.ip_forward" "TCP Forwarding"
 
 # ICMP Filtering
 take_action "/proc/sys/net/ipv4/icmp_echo_ignore_all" "net.ipv4.icmp_echo_ignore_all" "ICMP Filtering"
@@ -174,5 +188,7 @@ limit_connections_all
 
 # Exit add trap handlers.
 trap_cleanup
+
+
 
 
