@@ -14,7 +14,8 @@ ivar=$2
 }
 
 
-necho "statistics report"
+
+echo -en "\e[1;31mddoSutil:\033[0m statistics report generating..."
 echo -e ""
   necho "port [80] connection total:" " $(netstat -n | grep :80 |wc -l)"
   necho "apache memory usage:" "$(ps aux | grep apache | grep -v "grep" | awk '{ s += $6 } END { print s/1024, "Mb"}')"
@@ -28,4 +29,4 @@ echo -e ""
   necho "connections in LISTEN state:" "$(netstat -ant | awk '{print $6}' | grep LISTEN | wc -l)"
   necho "connections in ESTABLISHED state:" "$(netstat -ant | awk '{print $6}' | grep ESTABLISHED | wc -l)"
 echo -e ""
-  necho "connected IP addresses (top 10):" "$(netstat -tunv  | awk '{print $5}' | awk -F':' '{print $1}' | grep ^[0-9] | uniq -c | sort -rn | head -n 10)"
+  necho "connected IP addresses (top 10):\n" "$(netstat -tunv  | awk '{print $5}' | awk -F':' '{print $1}' | grep ^[0-9] | uniq -c | sort -rn | head -n 10)"

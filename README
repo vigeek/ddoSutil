@@ -1,16 +1,26 @@
+(ddoSutil)
+------------------------------------------------------------
+
 ddoSutil is a small collection of Linux scripts designed to deal with minor to moderate ddos attacks.  Modern DDOS attacks have the ability to attack various resources, therefore ddoSutil comes with 
 a combination of scripts intended to deal with different attack methods.  
+
+Please send all feedback, bugs to russ @ vigeek .net
 
 (License)
 ------------------------------------------------------------
 GPL v3
+
+(Compatibility)
+------------------------------------------------------------
+Red Hat Based:  CentOS, Fedora, RHEL
+Debian Based:   Ubuntu, Debian (most working, will be 100% soon)  
 
 (Installation)
 ------------------------------------------------------------
 Download the install.sh script (net installation, downloads files automatically).
 wget vigeek.net/projects/ddoSutil/install.sh
 chmod +x install.sh
-sh install.sh
+./install.sh
 
 (Modules)
 ------------------------------------------------------------
