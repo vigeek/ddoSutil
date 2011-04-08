@@ -4,16 +4,17 @@
 ddoSutil is a small collection of Linux scripts designed to deal with minor to moderate ddos attacks.  Modern DDOS attacks have the ability to attack various resources, therefore ddoSutil comes with 
 a combination of scripts intended to deal with different attack methods.  
 
-Please send all feedback, bugs to russ @ vigeek .net
+Please send all feedback, suggestions, bugs to russ @ vigeek .net
 
 (License)
 ------------------------------------------------------------
 GPL v3
 
-(Compatibility)
+(Tested Compatibility)
 ------------------------------------------------------------
-Red Hat Based:  CentOS, Fedora, RHEL
-Debian Based:   Ubuntu, Debian (most working, will be 100% soon)  
+Red Hat Based:  CentOS, RHEL, Fedora
+Debian Based:   Ubuntu, Debian  
+Other:  Should work with most *nix distros.
 
 (Installation)
 ------------------------------------------------------------
@@ -21,6 +22,14 @@ Download the install.sh script (net installation, downloads files automatically)
 wget vigeek.net/projects/ddoSutil/install.sh
 chmod +x install.sh
 ./install.sh
+
+(Usage)
+------------------------------------------------------------
+Nearly all of the ddoSutil scripts have a usage page (and the one or two that don't will) 
+Simply executing the script with -h will show the usage parameters.
+ie. ./ddoSutil-harden.sh -h
+
+Will create a legit usage document soon...
 
 (Modules)
 ------------------------------------------------------------
@@ -35,7 +44,6 @@ chmod +x install.sh
 2)  ddoSutil-harden.sh [bash]
 	. The harden script implements several basic preventative measures.
 	. Implements:  SYN Filtering, Forwarding(off), ICMP filtering and spoof protection.
-	. Configures IPTables to restrict the amount of connections per IP in the SYN state (port 80).
 	. Configures IPTables to set a hard quota on the amount of connections per IP address (global).
 	. Options can easily be independently enabled or disabled.
 
