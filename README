@@ -1,13 +1,15 @@
 (ddoSutil 1.0)
 
-ddoSutil 1.0 is being completely reworked, the reworked version will be easier to use and have significantly more functionality.
+ddoSutil 1.0 is being completely reworked, the reworked version will be easier to use and
+ have significantly more functionality.
 
 
 (ddoSutil v.3)
 ------------------------------------------------------------
 
-ddoSutil is a small collection of Linux scripts designed to deal with minor to moderate ddos attacks.  Modern DDOS attacks have the ability to attack various resources, therefore ddoSutil comes with 
-a combination of scripts intended to deal with different attack methods.  
+ddoSutil is a small collection of Linux scripts designed to deal with minor to moderate ddos attacks.  
+Modern DDOS attacks have the ability to attack various resources, therefore ddoSutil comes with a 
+combination of scripts intended to deal with different attack methods.  
 
 Please send all feedback, suggestions, bugs to russ @ vigeek .net
 
