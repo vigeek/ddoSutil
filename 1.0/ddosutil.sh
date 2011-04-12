@@ -7,6 +7,9 @@
 FAILED=1
 SUCCESS=0
 
+# Chain name.
+CHAIN="ddoSutil"
+
 # This holds a string for logging to identify which utility is logging what.
 PROGRAM=""
 
@@ -26,7 +29,7 @@ IP_TABLES=`which iptables`
 # Simple logging function
 log () {
     if [ -n "$VERBOSE" ] ; then eecho "$1" ; fi
-    echo "$(date +%m-%d-%Y\ %H:%M:%S) | $PROGRAM | $1" >> ./data/logs/$LOG_FILE
+    echo "$(date +%m-%d-%Y\ %H:%M:%S) | $PROGRAM | $1" >> $LOG_FILE
 }
 
 # Add some color.
@@ -55,6 +58,22 @@ $IP_TABLES -N ddoSutil &> /dev/null
 		return $FAILED
 	fi
 
+	# Begin building a simple firewall
+	for IFACE in ${IFACE_LIST//,/ } ; do
+	
+		$IP_TABLES -A $CHAIN -i $IFACE -m state --state ESTABLISHED, RELATED -j ACCEPT
+
+		for tcpin ${TCP_IN//,/ } ; do
+			$IP_TABLES -A $CHAIN -p tcp -i $IFACE --dport $tcpin -m state --state NEW -j ACCEPT
+		done
+
+		for tcpin ${UDP_IN//,/ } ; do
+			$IP_TABLES -A $CHAIN -p udp -i $IFACE--dport $tcpin -m state --state NEW -j ACCEPT
+		done
+		
+	done
+
+# We add our final lines at the end of the script to enforce blocking.
 
 fi
 
@@ -84,10 +103,11 @@ ddosutil_geoip () {
 if [ $GEOIP_BLOCK = "1" ] ; then
 
 	if [ $USE_MIRROR -eq 1 ] ; then
-		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip 
-http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
+		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip \
+		http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
 	else
-		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip http://vigeek.net/files/GeoIPCountryCSV.zip)
+		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip \
+		http://vigeek.net/files/GeoIPCountryCSV.zip)
 	fi
 	    if [ $GET_SUCCESS -eq 0 ] ; then
 			 log "Local version of GeoIP list current, no download required."
@@ -130,3 +150,21 @@ http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
 fi
 }
 
+
+###################################
+# Connection Limiting				 #
+###################################
+
+if [ $CONN_LIMIT -eq "1" ] ; then
+
+	$IP_TABLES -N $CHAIN &> /dev/null
+		if [ $? -eq $FAILED ] ; then
+			# The chain exists, so we will just add to it....
+			log "chain exists, adding connection limiting to it."
+		fi
+
+	for CPORT in ${LIMIT_PORTS//,/ } ; do
+		$IP_TABLES -A $CHAIN -p tcp --syn --dport $CPORT -m connlimit --connlimit-above $CONN_MAX -j REJECT
+	done
+	
+fi
