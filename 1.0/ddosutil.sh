@@ -239,3 +239,14 @@ if [ $SYN_LIMIT -eq "1" ] ; then
 	done
 	
 fi
+
+################################################
+# Timeout Reductions + others.				 
+################################################
+
+if [ $TIMEOUT_REDUCE -eq "1" ; then
+	echo 15 > /proc/sys/net/ipv4/tcp_fin_timeout
+	echo 1800 > /proc/sys/net/ipv4/tcp_keepalive_time
+	echo 0 > /proc/sys/net/ipv4/tcp_sack
+	echo 0 > /proc/sys/net/ipv4/tcp_window_scaling 
+fi
