@@ -73,6 +73,14 @@ if [ $FW_BUILDER -eq "1" ] ; then
 	$IP_TABLES -A INPUT -m state --state INVALID -j DROP
 	# Accept all in Established Related State
 	$IP_TABLES -A INPUT -m state --state ESTABLISHED, RELATED -j ACCEPT
+	# Only accept new connections in SYN state.
+	$IP_TABLES -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
+	# Drop fragmented packets.
+	$IP_TABLES -A INPUT -f -j DROP
+	# Drop Xmas packets
+	$IP_TABLES -A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+	# Drop NULL packets
+	$IP_TABLES -A INPIT -p tcp --tcp-flags ALL NONE -j DROP
 
 	# Begin building a simple firewall
 	for IFACE in ${IFACE_LIST//,/ } ; do
