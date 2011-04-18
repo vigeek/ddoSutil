@@ -57,7 +57,7 @@ if [ $FW_BUILDER -eq "1" ] ; then
 	$IP_TABLES -F -t filter
 	$IP_TABLES -X
 	# We should now have a cleared out policy, let's create a chain.
-	$IP_TABLES -N ddoSutil &> /dev/null
+	$IP_TABLES -N $CHAIN &> /dev/null
 		if [ $? -eq $FAILED ] ; then
 			log "Unable to create iptable rules"
 			return $FAILED
@@ -70,31 +70,30 @@ if [ $FW_BUILDER -eq "1" ] ; then
 	# Accept lo
 	$IP_TABLES -A INPUT -i lo -j ACCEPT
 	# Drop INVALID packets
-	$IP_TABLES -A INPUT -m state --state INVALID -j DROP
+	if [ $DROP_INVALID -eq "1" ] ; then $IP_TABLES -A INPUT -m state --state INVALID -j DROP ; fi
 	# Accept all in Established Related State
 	$IP_TABLES -A INPUT -m state --state ESTABLISHED, RELATED -j ACCEPT
 	# Only accept new connections in SYN state.
 	$IP_TABLES -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
 	# Drop fragmented packets.
-	$IP_TABLES -A INPUT -f -j DROP
+	if [ $DROP_FRAGMENTED -eq "1" ] ; then $IP_TABLES -A INPUT -f -j DROP ; fi
 	# Drop Xmas packets
-	$IP_TABLES -A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+	if [ $DROP_XMAS -eq "1" ] ; then $IP_TABLES -A INPUT -p tcp --tcp-flags ALL ALL -j DROP ; fi
 	# Drop NULL packets
-	$IP_TABLES -A INPIT -p tcp --tcp-flags ALL NONE -j DROP
+	if [ $DROP_NULL -eq "1" ] ; then $IP_TABLES -A INPIT -p tcp --tcp-flags ALL NONE -j DROP ; fi
 
 	# Begin building a simple firewall
 	for IFACE in ${IFACE_LIST//,/ } ; do
 
 		for tcpin ${TCP_IN//,/ } ; do
-			$IP_TABLES -A $CHAIN -p tcp -i $IFACE --dport $tcpin -m state --state NEW -j ACCEPT
+			$IP_TABLES -A INPUT -p tcp -i $IFACE --dport $tcpin -m state --state NEW -j ACCEPT
 		done
 
 		for tcpin ${UDP_IN//,/ } ; do
-			$IP_TABLES -A $CHAIN -p udp -i $IFACE--dport $tcpin -m state --state NEW -j ACCEPT
+			$IP_TABLES -A INPUT -p udp -i $IFACE--dport $tcpin -m state --state NEW -j ACCEPT
 		done
 	done
 
-	$IP_TABLES -A $CHAIN -p all -j RETURN
 
 # We add our final lines at the end of the script to enforce blocking.
 
@@ -110,9 +109,14 @@ PROGRAM="DShield"
 if [ $DSHIELD_BLOCK="1" ] ; then
 	wget -q -O 'dshield.lst' http://feeds.dshield.org/block.txt
 		if [ ! -f dshield.lst ] ; then
-		eecho "Error downloading dshield list"
-		return $FAILURE
-	fi
+			eecho "Error downloading dshield list"
+			return $FAILURE
+		fi
+	$IP_TABLES -N $PROGRAM
+	for dlist in `cat block.txt | grep ^[0-9] | awk '{print $1,$3}' | sed '{s| |/|g}'` ; do
+		$IP_TABLES -A $PROGRAM -s $dlist -j DROP
+	done
+		$IP_TABLES -A $PROGRAM -j RETURN
 fi
 
 ################################################
@@ -128,6 +132,12 @@ if [ $ZEUS_BLOCK="1" ] ; then
 			eecho "Error downloading zeus tracker list"
 			return $FAILURE
 		fi
+	# Begin creating list.
+	$IP_TABLES -N $PROGRAM
+	for dlist in `cat zeustrack.lst | grep -v '#'` ; do
+        $IP_TABLES -A $PROGRAM -s $dlist -j DROP
+	done
+		$IP_TABLES -A $PROGRAM -j RETURN
 fi
 
 ################################################
@@ -143,6 +153,49 @@ if [ $VIGEEK_BLOCK="1" ] ; then
 			eecho "Error downloading dshield list"
 		return $FAILURE
 		fi
+	# Begin creaitng list
+	$IP_TABLES -N $PROGRAM
+	for dlist in `cat vigeek.lst | grep -v '#'` ; do
+        $IP_TABLES -A $PROGRAM -s $dlist -j DROP
+	done
+		$IP_TABLES -A $PROGRAM -j RETURN
+fi
+
+##############################################################
+# IANA Blocking
+##############################################################
+
+PROGRAM="IANA"
+
+if [ $IANA_BLOCK -eq "1" ] ; then
+	$IP_TABLES -N $PROGRAM
+	#
+	$IP_TABLES -A $PROGRAM -s 0.0.0.0/7 -j DROP
+	$IP_TABLES -A $PROGRAM -s 2.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 5.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 14.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 23.0.0.0/8 -j DROP   
+	$IP_TABLES -A $PROGRAM -s 27.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 31.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 36.0.0.0/7 -j DROP
+	$IP_TABLES -A $PROGRAM -s 39.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 42.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 46.0.0.0/8 -j DROP 
+	$IP_TABLES -A $PROGRAM -s 49.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 50.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 100.0.0.0/6 -j DROP
+	$IP_TABLES -A $PROGRAM -s 104.0.0.0/6 -j DROP
+	$IP_TABLES -A $PROGRAM -s 175.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 176.0.0.0/7 -j DROP
+	$IP_TABLES -A $PROGRAM -s 179.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 181.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 182.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 185.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 223.0.0.0/8 -j DROP
+	$IP_TABLES -A $PROGRAM -s 224.0.0.0/4 -j DROP
+	$IP_TABLES -A $PROGRAM -s 240.0.0.0/4 -j DROP
+	#
+	$IP_TABLES -A $PROGRAM -j RETURN
 fi
 
 ################################################
