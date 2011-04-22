@@ -18,7 +18,7 @@ IP_TABLES=`which iptables`
 IP_TABLES_SAVE=`which iptables-save`
 
 # Source the config.
-if [ -f "ddosutil.conf" ]
+if [ -f "ddosutil.conf" ] ; then
 	. ./ddosutil.conf
 else
 	echo -e "Unable to read the configuration file"
@@ -30,6 +30,10 @@ fi
 # General Functions & Init
 ################################################
 
+eecho () {
+    echo -e "\e[1;31mddoSutil:\033[0m $1"
+}
+
 log () {
     if [ -n "$VERBOSE" ] ; then eecho "$1" ; fi
 echo "$(date +%m-%d-%Y\ %H:%M:%S) | [$PROGRAM] | $1" >> $LOG_FILE
@@ -37,11 +41,6 @@ echo "$(date +%m-%d-%Y\ %H:%M:%S) | [$PROGRAM] | $1" >> $LOG_FILE
 
 # Create initial log entry
 log "ddoSutil has kicked off"
-
-# Add some color.
-eecho () {
-    echo -e "\e[1;31mddoSutil:\033[0m $1"
-}
 
 # See if CSF/LFD is running.
 CSFD=`pidof lfd`
@@ -95,15 +94,15 @@ if [ $FW_BUILDER -eq "1" ] ; then
 		fi
 	# Accept All Out
 	$IP_TABLES -P OUTPUT ACCEPT
-	# Drop ALL In
-	$IP_TABLES -P INPUT DROP
+	# Accept All In (we will block after our rules.)
+	$IP_TABLES -P INPUT ACCEPT
 	# Accept lo
 	$IP_TABLES -A INPUT -i lo -j ACCEPT
 	log "flushed the firewall and created baseline policy"
 	# Drop INVALID packets
 	if [ $DROP_INVALID -eq "1" ] ; then $IP_TABLES -A INPUT -m state --state INVALID -j DROP ; fi
 	# Accept all in Established Related State
-	$IP_TABLES -A INPUT -m state --state ESTABLISHED, RELATED -j ACCEPT
+	$IP_TABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 	# Only accept new connections in SYN state.
 	$IP_TABLES -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
 	# Drop fragmented packets.
@@ -111,18 +110,18 @@ if [ $FW_BUILDER -eq "1" ] ; then
 	# Drop Xmas packets
 	if [ $DROP_XMAS -eq "1" ] ; then $IP_TABLES -A INPUT -p tcp --tcp-flags ALL ALL -j DROP ; fi
 	# Drop NULL packets
-	if [ $DROP_NULL -eq "1" ] ; then $IP_TABLES -A INPIT -p tcp --tcp-flags ALL NONE -j DROP ; fi
+	if [ $DROP_NULL -eq "1" ] ; then $IP_TABLES -A INPUT -p tcp --tcp-flags ALL NONE -j DROP ; fi
 	log "enabled baseline drop rules for undesirable packets"
 
 	# Begin building a simple firewall
 	for IFACE in ${IFACE_LIST//,/ } ; do
 		log "Opening requested ports on [$IFACE]"
 		
-		for tcpin ${TCP_IN//,/ } ; do
+		for tcpin in ${TCP_IN//,/ } ; do
 			$IP_TABLES -A INPUT -p tcp -i $IFACE --dport $tcpin -m state --state NEW -j ACCEPT
 		done
 
-		for tcpin ${UDP_IN//,/ } ; do
+		for tcpin in ${UDP_IN//,/ } ; do
 			$IP_TABLES -A INPUT -p udp -i $IFACE--dport $tcpin -m state --state NEW -j ACCEPT
 		done
 	done
@@ -146,7 +145,7 @@ if [ $DSHIELD_BLOCK="1" ] ; then
 			return $FAILURE
 		fi
 	$IP_TABLES -N $PROGRAM
-	for dlist in `cat block.txt | grep ^[0-9] | awk '{print $1,$3}' | sed '{s| |/|g}'` ; do
+	for dlist in `cat dshield.lst | grep ^[0-9] | awk '{print $1,$3}' | sed '{s| |/|g}'` ; do
 		$IP_TABLES -A $PROGRAM -s $dlist -j DROP
 	done
 		$IP_TABLES -A $PROGRAM -j RETURN
@@ -264,18 +263,15 @@ ddosutil_geoip () {
 if [ $GEOIP_BLOCK = "1" ] ; then
  log "enabling geoIP blocking"
 	if [ $USE_MIRROR -eq 1 ] ; then
-		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip \
-		http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
+		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIP.zip' -z GeoIP.zip http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip)
 	else
-		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIPCountryCSV.zip' -z GeoIPCountryCSV.zip \
-		http://vigeek.net/files/GeoIPCountryCSV.zip)
+		GET_SUCCESS=$(curl -s -w %{size_download} -o 'GeoIP.zip' -z GeoIP.zip http://vigeek.net/files/GeoIPCountryCSV.zip)
 	fi
 		if [ $GET_SUCCESS -eq 0 ] ; then
 			log "Local version of GeoIP list current, no download required."
 		else
 			log "Local version outdated, downloaded latest GeoIP list total transfer: $GET_SUCCESS"
 		fi
-fi
 
 # Trim spaces if any from our csv list
 SAVE_FILE="ddosutil-geoip.lst"
@@ -287,7 +283,7 @@ fi
 
 # Build our list.
 # Add for loop (trim space and csv from geo_list)
-zcat GeoIPCountryCSV.zip | grep -i "$COUNTRY_NAME" | cut -d "," -f1,2 | sed 's/,/-/g' | tr -d '"' > $SAVE_FILE
+zcat GeoIP.zip | grep -i "$COUNTRY_NAME" | cut -d "," -f1,2 | sed 's/,/-/g' | tr -d '"' > $SAVE_FILE
 	if [ -f $SAVE_FILE ] ; then
 		if [ $(cat $SAVE_FILE | wc -l) -eq 0 ] ; then
 			log "Error: no geoIP list built, is this correct: $COUNTRY_NAME"
@@ -316,6 +312,8 @@ fi
 # Connection Limiting 
 ################################################
 
+PROGRAM="ConnLimit"
+
 if [ $CONN_LIMIT -eq "1" ] ; then
 
 	$IP_TABLES -N $CHAIN &> /dev/null
@@ -335,6 +333,8 @@ fi
 # SYN Flood Protection				 
 ################################################
 
+PROGRAM="SYNProtect"
+
 if [ $SYN_LIMIT -eq "1" ] ; then
 
 	$IP_TABLES -N $CHAIN &> /dev/null
@@ -349,28 +349,42 @@ if [ $SYN_LIMIT -eq "1" ] ; then
 	
 fi
 
+# SYN Cookies.
 if [ $SYN_COOKIES -eq "1" ] ; then echo 1 > /proc/sys/net/ipv4/tcp_syncookies ; fi
+
+# Set SYN Retries limitations.
+if [ $SYN_RETRIES -eq "1" ] ; then
+	echo $SYN_ACK_RETRY > /proc/sys/net/ipv4/tcp_synack_retries
+	echo $SYN_RETRY > /proc/sys/net/ipv4/tcp_syn_retries
+fi
 
 ################################################
 # Timeout Reductions + others.				 
 ################################################
 
-if [ $TIMEOUT_REDUCE -eq "1" ; then
+if [ $TIMEOUT_REDUCE -eq "1" ] ; then
 	echo 15 > /proc/sys/net/ipv4/tcp_fin_timeout
 	echo 1800 > /proc/sys/net/ipv4/tcp_keepalive_time
 	echo 0 > /proc/sys/net/ipv4/tcp_sack
-	echo 0 > /proc/sys/net/ipv4/tcp_window_scaling 
+	echo 0 > /proc/sys/net/ipv4/tcp_window_scaling
+	# Slightly reduce the default tcp_retries.
+	echo 3 > /proc/sys/net/ipv4/tcp_retries1
+	echo 10 > /proc/sys/net/ipv4/tcp_retries2
 fi
 
 # Set back log queue, first verify our new value is greater than old.
 CUR_VALUE=`cat /proc/sys/net/ipv4/tcp_max_syn_backlog`
 if [ $CUR_VALUE -gt $BACKLOG_QUEUE ] ; then
 	eecho "Desired backlog value $BACKLOG_QUEUE is less than $CUR_VALUE"
+else
+	echo -e $BACKLOG_QUEUE > /proc/sys/net/ipv4/tcp_max_syn_backlog
 fi
 
 ################################################
 # Basic spoof protection.				 
 ################################################
+
+PROGRAM="SPOOFprotect"
 
 if [ $SPOOF_PROTECT -eq "1" ] ; then
 
