@@ -1,21 +1,12 @@
-(ddoSutil 1.0)
-
-ddoSutil 1.0 is being completely reworked, the reworked version will be easier to use and
- have significantly more functionality.
-
-11/2011:  ddoSutil 1.0 will be updated soon, with a new firewall builder aimed at ddos attacks.
-11/2011:  Added final blocking to ddosutil 1.0, creates functional anti-ddos firewall.
-
-(ddoSutil v.4)
-------------------------------------------------------------
-Fixed some typos that were causing issues with particular scripts.
-
-(ddoSutil v.3)
+(ddoSutil v1.0)
 ------------------------------------------------------------
 
 ddoSutil is a small collection of Linux scripts designed to deal with minor to moderate ddos attacks.  
 Modern DDOS attacks have the ability to attack various resources, therefore ddoSutil comes with a 
 combination of scripts intended to deal with different attack methods.  
+
+As of 1.0, ddoSutil now includes a firewall builder in the 1.0/ directory.  This firewall is designed for 
+ddos attacks and helping to mitigate them.
 
 Please send all feedback, suggestions, bugs to russ @ vigeek .net
 
@@ -46,6 +37,7 @@ Will create a legit usage document soon...
 
 (Modules)
 ------------------------------------------------------------
+
 1)  ddoSutil-geoIP.sh [bash]
 	. The GeoIP scripts blocks connectivity from a particular country.
 	. Easy to use, can unlock/block country with single command.
@@ -85,5 +77,8 @@ Will create a legit usage document soon...
 7) ddoSutil-nstat.sh [bash]
         . Shows detailed network information.
         . Useful at determining the type of ddos attack.
+8) ddosutil.sh [bash]
+	. Firewall builder with large rule set defined in ddosutil.conf
+	. Has connection limiting, syn rate limiting and large array of block lists.
 
 
