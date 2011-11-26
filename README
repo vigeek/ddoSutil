@@ -22,10 +22,7 @@ Other:  Should work with most *nix distros.
 
 (Installation)
 ------------------------------------------------------------
-Download the install.sh script (net installation, downloads files automatically).
-wget vigeek.net/projects/ddoSutil/install.sh
-chmod +x install.sh
-./install.sh
+Download the gzip from Github, extract and you're set.
 
 (Usage)
 ------------------------------------------------------------
