@@ -4,7 +4,7 @@ ddoSutil 1.0 is being completely reworked, the reworked version will be easier t
  have significantly more functionality.
 
 11/2011:  ddoSutil 1.0 will be updated soon, with a new firewall builder aimed at ddos attacks.
-
+11/2011:  Added final blocking to ddosutil 1.0, creates functional anti-ddos firewall.
 
 (ddoSutil v.4)
 ------------------------------------------------------------

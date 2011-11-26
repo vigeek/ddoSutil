@@ -149,6 +149,7 @@ if [ $DSHIELD_BLOCK="1" ] ; then
 		$IP_TABLES -A $PROGRAM -s $dlist -j DROP
 	done
 		$IP_TABLES -A $PROGRAM -j RETURN
+                $IP_TABLES -I INPUT 1 -j $PROGRAM
 fi
 
 ################################################
@@ -171,6 +172,7 @@ if [ $ZEUS_BLOCK="1" ] ; then
         $IP_TABLES -A $PROGRAM -s $dlist -j DROP
 	done
 		$IP_TABLES -A $PROGRAM -j RETURN
+		$IP_TABLES -I INPUT 1 -j $PROGRAM
 fi
 
 ################################################
@@ -193,6 +195,8 @@ if [ $VIGEEK_BLOCK="1" ] ; then
         $IP_TABLES -A $PROGRAM -s $dlist -j DROP
 	done
 		$IP_TABLES -A $PROGRAM -j RETURN
+                $IP_TABLES -I INPUT 1 -j $PROGRAM
+
 fi
 
 ##############################################################
@@ -230,6 +234,9 @@ if [ $IANA_BLOCK -eq "1" ] ; then
 	$IP_TABLES -A $PROGRAM -s 240.0.0.0/4 -j DROP
 	#
 	$IP_TABLES -A $PROGRAM -j RETURN
+	# BLOCK it
+        $IP_TABLES -I INPUT 1 -j $PROGRAM
+
 fi
 
 ################################################
@@ -251,6 +258,7 @@ if [ $BOGON_BLOCK="1" ] ; then
         $IP_TABLES -A $PROGRAM -s $dlist -j DROP
 	done
 		$IP_TABLES -A $PROGRAM -j RETURN
+		$IP_TABLES -I INPUT 1 -j $PROGRAM
 fi
 
 ################################################
@@ -316,15 +324,20 @@ PROGRAM="ConnLimit"
 
 if [ $CONN_LIMIT -eq "1" ] ; then
 
-	$IP_TABLES -N $CHAIN &> /dev/null
+	$IP_TABLES -N $PROGRAM &> /dev/null
 	if [ $? -eq $FAILED ] ; then
 		# The chain exists, so we will just add to it....
 		log "chain exists, adding connection limiting to it."
 	fi
 	
 	for CPORT in ${LIMIT_PORTS//,/ } ; do
-		$IP_TABLES -A $CHAIN -p tcp --syn --dport $CPORT -m connlimit --connlimit-above $CONN_MAX -j REJECT
+		$IP_TABLES -A $PROGRAM -p tcp --syn --dport $CPORT -m connlimit --connlimit-above $CONN_MAX -j REJECT
 	done
+# Make it active.
+$IP_TABLES -A $PROGRAM -j RETURN
+$IP_TABLES -I INPUT 1 -j $PROGRAM
+
+
 fi
 
 
@@ -337,16 +350,19 @@ PROGRAM="SYNProtect"
 
 if [ $SYN_LIMIT -eq "1" ] ; then
 
-	$IP_TABLES -N $CHAIN &> /dev/null
+	$IP_TABLES -N $PROGRAM &> /dev/null
 		if [ $? -eq $FAILED ] ; then
 			# The chain exists, so we will just add to it....
 			log "chain exists, adding SYN flood blocking to existing chain."
 		fi
 
 	for CPORT in ${LIMIT_PORTS//,/ } ; do
-		$IP_TABLES -A $CHAIN -p tcp --syn --dport $CPORT -m connlimit --connlimit-above $CONN_MAX -j REJECT
+		$IP_TABLES -A $PROGRAM -p tcp --syn --dport $CPORT -m connlimit --connlimit-above $CONN_MAX -j REJECT
 	done
 	
+$IP_TABLES -A $PROGRAM -j RETURN
+$IP_TABLES -I INPUT 1 -j $PROGRAM
+
 fi
 
 # SYN Cookies.
@@ -411,3 +427,11 @@ if [ $SPOOF_PROTECT -eq "1" ] ; then
 	done
 
 fi
+
+################################################
+# Finish IPTable rules.
+################################################
+
+# Final DROP Rules on inbound.
+
+$IP_TABLES -A INPUT -j DROP
