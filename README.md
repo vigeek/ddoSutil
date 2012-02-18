@@ -2,7 +2,7 @@
 
 **ddoSutil** is a project aimed at dealing with *ddos* attacks on Linux systems.  Since many *ddos* attacks differ in complexity, the objective is to provide a variety of utilities to deal with different types of attacks.
 
-Created to be as portable as possible without requirements, developed mostly in bash (with a until or two in Perl).  Tested on [CentOS](http://centos.org) and [Debian](http://debian.org) should function with no or minimal effort on most Linux distributions.****
+Created to be as portable as possible without requirements, developed mostly in bash (with a until or two in Perl).  Tested on [CentOS](http://centos.org) and [Debian](http://debian.org) should function with no or minimal effort on most Linux distributions.
 
 **Actively maintained** please submit issues, feedback and suggestions; or e-mail russ -at- vigeek.net
 
