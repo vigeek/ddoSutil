@@ -323,6 +323,7 @@ fi
 PROGRAM="ConnLimit"
 
 if [ $CONN_LIMIT -eq "1" ] ; then
+	log "limiting connections to $CONN_MAX per source"
 
 	$IP_TABLES -N $PROGRAM &> /dev/null
 	if [ $? -eq $FAILED ] ; then
@@ -349,7 +350,7 @@ fi
 PROGRAM="SYNProtect"
 
 if [ $SYN_LIMIT -eq "1" ] ; then
-
+	log "enabling SYN protection with limit of $CONN_MAX per source"
 	$IP_TABLES -N $PROGRAM &> /dev/null
 		if [ $? -eq $FAILED ] ; then
 			# The chain exists, so we will just add to it....
@@ -379,21 +380,15 @@ fi
 ################################################
 
 if [ $TIMEOUT_REDUCE -eq "1" ] ; then
-	echo 15 > /proc/sys/net/ipv4/tcp_fin_timeout
-	echo 1800 > /proc/sys/net/ipv4/tcp_keepalive_time
+	log "Enabling timeout reductions"
+	echo 10 > /proc/sys/net/ipv4/tcp_fin_timeout
+	echo 1200 > /proc/sys/net/ipv4/tcp_keepalive_time
 	echo 0 > /proc/sys/net/ipv4/tcp_sack
 	echo 0 > /proc/sys/net/ipv4/tcp_window_scaling
 	# Slightly reduce the default tcp_retries.
 	echo 3 > /proc/sys/net/ipv4/tcp_retries1
 	echo 10 > /proc/sys/net/ipv4/tcp_retries2
-fi
-
-# Set back log queue, first verify our new value is greater than old.
-CUR_VALUE=`cat /proc/sys/net/ipv4/tcp_max_syn_backlog`
-if [ $CUR_VALUE -gt $BACKLOG_QUEUE ] ; then
-	eecho "Desired backlog value $BACKLOG_QUEUE is less than $CUR_VALUE"
-else
-	echo -e $BACKLOG_QUEUE > /proc/sys/net/ipv4/tcp_max_syn_backlog
+	echo 40 > /proc/sys/net/ipv4/tcp_keepalive_intvl
 fi
 
 ################################################
@@ -403,7 +398,7 @@ fi
 PROGRAM="SPOOFprotect"
 
 if [ $SPOOF_PROTECT -eq "1" ] ; then
-
+	log "Implementing basic spoof protection"
 	# Ancient host.conf modifications.
 	if [ -z "$(grep 'order hosts,bind' /etc/host.conf)" ] ; then
 		echo -e "order hosts,bind" >> /etc/host.conf
@@ -426,6 +421,39 @@ if [ $SPOOF_PROTECT -eq "1" ] ; then
 		echo 1 > $rpf
 	done
 
+fi
+
+################################################
+# ddoSutil Harden functions
+################################################
+
+if [ $DDOSUTIL_HARDEN -eq "1" ] ; then
+	log "Implementing TCP stack optimizations"
+# Reduce overhead by disabling timestamps and metrics.
+	echo 1 > /proc/sys/net/ipv4/tcp_no_metrics_save
+	echo 0 >/proc/sys/net/ipv4/tcp_timestamps
+
+	# Reuse and recycle time wait connections, reduces spawning overhead.
+	echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse
+	echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle
+fi
+
+if [ $DDOSUTIL_UP_QUEUE -eq "1" ] ; then
+	# Set back log queue, first verify our new value is greater than old.
+	CUR_VALUE=`cat /proc/sys/net/ipv4/tcp_max_syn_backlog`
+	if [ ! $CUR_VALUE -gt 4096 ] ; then
+		echo -e 4096 > /proc/sys/net/ipv4/tcp_max_syn_backlog
+	fi
+
+	CUR_VALUE=`cat /proc/sys/net/core/somaxconn`
+	if [ ! $CUR_VALUE -gt 1024 ] ; then
+		echo -e 1024 > /proc/sys/net/ipv4/tcp_max_syn_backlog
+	fi
+
+	CUR_VALUE=`cat /proc/sys/net/core/netdev_max_backlog`
+	if [ ! $CUR_VALUE -gt 2000 ] ; then
+		echo -e 2000 > /proc/sys/net/core/netdev_max_backlog
+	fi
 fi
 
 ################################################
