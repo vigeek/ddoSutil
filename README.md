@@ -38,8 +38,9 @@ Also included are 5 utilities, each with a different purpose.  Each utility has 
 	* Implements general sysctl tweaks to help deal with attacks.
 	
 
-###### License
+##### License
 
 GPL v3
 
-**Author** Russ Thompson ( Russ -at - vigeek.net)
+###### Author 
+Russ Thompson ( Russ -at - vigeek.net)
