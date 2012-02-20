@@ -6,18 +6,10 @@ use Fcntl qw(:flock);
 
 use strict;
 
-## Webserver type
-## 1 = Apache
-## 2 = NginX (Coming soon)
-my $WEBSERVER_ENGINE="1"
-
-## Log location.
-## Point this to your webservers access_log.
-my $ACCESS_LOG="/var/log/httpd/access_log"
-
 my $reg_ex=""
 
 if ($USE_LOGGING==1) {
+
 	use Log::Log4perl;
 	
 	my $log_conf = q(
