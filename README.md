@@ -16,7 +16,7 @@ In the root of the directory is *ddosutil.sh* this applies a blanket approach on
 
 **Utilities**
 
-Also included are 5 utilities, each with a different purpose.  Each utility has a configuration file in **utils/conf/** or they may be ran supplying *-h* for help and general usage (e.g. ./ddosutil.geoip.sh -h)
+Also included are 6 utilities, each with a different purpose.  Each utility has a configuration file in **utils/conf/** or they may be ran supplying *-h* for help and general usage (e.g. ./ddosutil.geoip.sh -h)
 
 
 * ddoSutil-geoip.sh
@@ -36,7 +36,9 @@ Also included are 5 utilities, each with a different purpose.  Each utility has 
 * ddoSutil-harden.sh
 	* *no longer maintained* most replaced and functions improved in *ddosutil.sh*
 	* Implements general sysctl tweaks to help deal with attacks.
-	
+* ddoSutil-logblockd.pl [In progress]
+	* Daemon automatically monitors apache/nginx logs.
+	* Actively blocks IP addresses making specific requests (.e.g.: invalid URLs)	
 
 ##### License
 
