@@ -39,7 +39,11 @@ Also included are 6 utilities, each with a different purpose.  Each utility has 
 * ddoSutil-logblockd.pl [In progress]
 	* Daemon automatically monitors apache/nginx logs.
 	* Actively blocks IP addresses making specific requests (.e.g.: invalid URLs)	
-
+* ddoSutil-deflated.pl [In progress]
+	* Daemon automatically monitors active connections.
+	* Actively blocks IP addresses with high connection counts.
+	* Actively blocks IP addresses making frequent connections.
+ 
 ##### License
 
 GPL v3
