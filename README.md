@@ -1,4 +1,4 @@
-## ddoSutil 0.9.1
+## ddoSutil 0.9.2
 
 **ddoSutil** is a project aimed at dealing with *ddos* attacks on Linux systems.  Since many *ddos* attacks differ in complexity, the objective is to provide a variety of utilities to deal with different types of attacks.
 
