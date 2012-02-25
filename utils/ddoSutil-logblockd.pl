@@ -6,7 +6,11 @@ use Fcntl qw(:flock);
 
 use strict;
 
-my $reg_ex=""
+my $search_regex="$SEARCH_STRING\n";
+my $ipgrab_regex="((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?![\\d])";
+
+my $list_location                  = "logblockd.lst";
+open LISTLOC, ">>$list_location" or die "unable to open $file $!";
 
 if ($USE_LOGGING==1) {
 
@@ -24,12 +28,22 @@ if ($USE_LOGGING==1) {
 	my $logger = Log::Log4perl->get_logger();
 }
 
-open(my $log, "tail -n0 --follow=name $ACCESS_LOG |");
+open(my $log, "tail --follow=name -n0 $ACCESS_LOG |");
   while (my $line = <$log>) 
   { 
-  	if ($line =~ m/$reg_ex/){
-  		# Setup regex pattern based on string.
-  	}
+     if ($line =~ /\Q$search_regex/){
+      # Get the IP address if possible.
+        if ($line =~m/$ipgrab_regex/) {
+          # Add them to our chain and list.
+          $logger->info("Adding IP address to block list: [$1]");
+          $cur_time =qx'echo $(date +"%F %T")';
+            print LISTLOC "$cur_time - [$1]";
+        }
+        else {
+          $logger->error("Block pattern matched, unable to obtain IP address");
+        }
+     } 
 
 
   }
+

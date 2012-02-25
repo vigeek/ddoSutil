@@ -429,13 +429,15 @@ fi
 
 if [ $DDOSUTIL_HARDEN -eq "1" ] ; then
 	log "Implementing TCP stack optimizations"
-# Reduce overhead by disabling timestamps and metrics.
+	# Reduce overhead by disabling timestamps and metrics.
 	echo 1 > /proc/sys/net/ipv4/tcp_no_metrics_save
 	echo 0 >/proc/sys/net/ipv4/tcp_timestamps
 
 	# Reuse and recycle time wait connections, reduces spawning overhead.
 	echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse
 	echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle
+	# Overflow handling
+	eho 1 > /proc/sys/net/ipv4/tcp_abort_on_overflow
 fi
 
 if [ $DDOSUTIL_UP_QUEUE -eq "1" ] ; then
