@@ -6,6 +6,13 @@ use Fcntl qw(:flock);
 
 use strict;
 
+my $config_file = "./conf/logblockd.conf";
+  open CONFIG, "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
+my $config = join "", <CONFIG>;
+close CONFIG;
+  eval $config;
+    die "Could not read the configuration file '$config_file'" if $@;
+
 my $search_regex="$SEARCH_STRING\n";
 my $ipgrab_regex="((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?![\\d])";
 
@@ -36,7 +43,7 @@ open(my $log, "tail --follow=name -n0 $ACCESS_LOG |");
         if ($line =~m/$ipgrab_regex/) {
           # Add them to our chain and list.
           $logger->info("Adding IP address to block list: [$1]");
-          $cur_time =qx'echo $(date +"%F %T")';
+          my $cur_time =qx'echo $(date +"%F %T")';
             print LISTLOC "$cur_time - [$1]";
         }
         else {
