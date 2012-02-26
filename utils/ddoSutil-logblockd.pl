@@ -35,6 +35,19 @@ if ($USE_LOGGING==1) {
 	my $logger = Log::Log4perl->get_logger();
 }
 
+my $bash_action="";
+
+sub run_shell($) {
+  my $argv1="$_[0]"
+  $bash_action=qx"$argv1";
+    if ($bash_action=="1") {
+      $logger->error("run_shell returned an error.");
+    }
+}
+
+$bash_action=qx'iptables -N LOGBLOCKD';
+$bash_action=qx'iptables -A LOGBLOCKD -j RETURN';
+
 open(my $log, "tail --follow=name -n0 $ACCESS_LOG |");
   while (my $line = <$log>) 
   { 
@@ -42,7 +55,8 @@ open(my $log, "tail --follow=name -n0 $ACCESS_LOG |");
       # Get the IP address if possible.
         if ($line =~m/$ipgrab_regex/) {
           # Add them to our chain and list.
-          $logger->info("Adding IP address to block list: [$1]");
+          run_shell('iptables -I LOGBLOCKD 1 -s $1 -j DROP &> /dev/null ; echo $?');
+          $logger->info("Added IP address to block list: [$1]");
           my $cur_time =qx'echo $(date +"%F %T")';
             print LISTLOC "$cur_time - [$1]";
         }
