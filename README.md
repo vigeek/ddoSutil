@@ -26,7 +26,7 @@ Also included are 6 utilities, each with a different purpose.  Each utility has 
 * ddoSutil-gpblock.sh
 	* Some *ddos* attacks make GET/PUT requests to invalid URLs.  This will…
 	* Build block lists based on requests made to apache and actively drop the offending IPs.
-	* Configureable, ability to control how many requests per offending IP to resource, allowed.
+	* Configurable, ability to control how many requests per offending IP to resource, allowed.
 * ddoSutil-nstat.sh
 	* 	Shows information helpful to determine the help type of attack.
 * ddoSutil-mySQLrecover.pl
